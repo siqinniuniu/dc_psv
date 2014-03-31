@@ -13,7 +13,7 @@ ts = sqrt(vs.^-2-rayp^2).*thik;
 ts = sum(ts(1:nlyr-1));
 
 %pad zeros to avoid time warp
-npad = ceil(ts*fs);
+npad = ceil(2*ts*fs);
 nw = nt+npad;
 
 %frequency samples
@@ -41,7 +41,7 @@ for iw = 1:nw
 end
 
 %apply time shift, ifft and cut
-m1 = ifft(repmat(exp(1i*w*ts),4,1).*Fm1,[],2,'symmetric');
+m1 = ifft(repmat(exp(-1i*w*ts),4,1).*Fm1,[],2,'symmetric');
 m1 = m1(:,1:nt);
 
 end

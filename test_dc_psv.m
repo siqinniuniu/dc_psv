@@ -30,9 +30,6 @@ vr = sacst(1).data;
 vz = sacst(2).data;
 rz = sacst(3).data;
 
-% figure
-% plot(t,vr,'k',t,vz,'r',t,rz,'b')
-
 %% downward continuate the surface record
 
 nt = length(t);
@@ -44,3 +41,9 @@ m1 = dc_psv(...
     nlyr,vp,vs,rho,thik,... % earth model
     nt,v0,fs,...            % time samples of velocity-stress vector
     rayp);                  % ray parameter
+
+
+figure
+subplot(3,1,1); plot(t,vr,'k',t,vz,'r',t,rz,'b')
+subplot(3,1,2); plot(t,m1(2,:),t,m1(1,:))
+subplot(3,1,3); plot(t,m1(3,:),t,m1(4,:))
