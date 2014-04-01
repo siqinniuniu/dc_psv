@@ -38,58 +38,51 @@ nz = length(z);
 nevt = size(sacst,1);
 nt = length(t);
 v0 = zeros(4,nt);
-m0 = zeros(4*nevt,nt);
-m1 = zeros(4*nevt,nt,nz);
+m0 = zeros(4*nevt,nt,nz);
+m1 = m0;
 
 rayp = [sacst(:,1).user0];
 for ievt = 1:nevt
-
+    
+    %state vector on the surface
     v0(1,:) = sacst(ievt,1).data;
     v0(2,:) = -1*sacst(ievt,2).data;
     
-    %mode vector in the ice sheet
+    %mode vector in the ice/bedrock
     idx4_evt = 4*(ievt-1)+(1:4);
-    thik = [0 0];
-    m0(idx4_evt,:) = dc_psv(...
-            1,vp,vs,rho,thik,... % earth model
-            nt,v0,fs,...         % time samples of velocity-stress vector
-            rayp(ievt));
-    
-    %mode vector in the bedrock
-    for iz = 1:nz
-        thik = [z(iz) 0];
-        m1(idx4_evt,:,iz) = dc_psv(...
-            nlyr,vp,vs,rho,thik,... % earth model
+    for imod = 1:nmod
+        [mm1,mm0] = dc_psv(...
+            nlyr,vp(:,imod),vs(:,imod),rho(:,imod),thik(:,imod),... % earth model
             nt,v0,fs,...            % time samples of velocity-stress vector
             rayp(ievt));            % ray parameter
+        m1(idx4_evt,:,iz) = mm1;
+        m0(idx4_evt,:,iz) = mm0;
     end
 end
 
 %% calculate Su energy reduction ratio
 
-Esu0 = zeros(nevt,1);
+Esu0 = zeros(nevt,nz);
+Esu1 = Esu0;
 for ievt = 1:nevt
-    idx0 = 4*(ievt-1);
-    Su = m0(idx0+4,:);
-    qs = sqrt(vs(1)^-2-rayp(ievt)^2);
-    coef = rho(1)*vs(1)^2*qs;
-    Esu0(ievt) = coef*sum(Su.^2);
-end
-
-Esu1 = zeros(nevt,nz);
-for ievt = 1:nevt
-    qs = sqrt(vs(2)^-2-rayp(ievt)^2);
-    coef = rho(2)*vs(2)^2*qs;
+    
+    qs0 = sqrt(vs(1)^-2-rayp(ievt)^2);
+    coef0 = rho(1)*vs(1)^2*qs;
+    
+    qs1 = sqrt(vs(nlyr)^-2-rayp(ievt)^2);
+    coef1 = rho(nlyr)*vs(nlyr)^2*qs;
     
     idx0 = 4*(ievt-1);
     for iz = 1:nz
-        Su = m1(idx0+4,:,iz);
-        Esu1(ievt,iz) = coef*sum(Su.^2);
+        Su1 = m1(idx0+4,:,iz);
+        Esu1(ievt,iz) = coef*sum(Su1.^2);
+        Su1 = m1(idx0+4,:,iz);
+        Esu1(ievt,iz) = coef*sum(Su1.^2);
     end
 end
 
 %Su energy reduction
-REDsu = 1-Esu1./repmat(Esu0,1,nz);
+REDsu = 1-Esu1./Esu0;
 
 %% plot
 

@@ -1,12 +1,16 @@
-function [ m1 ] = dc_psv(...
+function [ m1, m0 ] = dc_psv(...
     nlyr,vp,vs,rho,thik,... % earth model
     nt,v0,fs,...            % time samples of velocity-stress vector
     rayp)                   % ray parameter
 %downward continuate surface plane wavefield through plane layered elastic 
-%model (non-evanescent wave), and decompose in the last layer
+%model (non-evanescent wave), and decompose to wave vector in the last layer
 %size(v0) = size(v0) = [4,nt];
 
 %% parameters
+
+%wave vector in the first layer
+[~,Minv] = mode_psv(vp(1),vs(1),rho(1),rayp);
+m0 = Minv*v0;
 
 %time shift of S wave during downward continuation
 ts = sqrt(vs.^-2-rayp^2).*thik;
@@ -24,7 +28,7 @@ idx = w>(wnyq+dw/4);
 w(idx) = w(idx)-2*pi*fs;
 
 %haskell matrix
-Hdec  = haskell_dec_psv(...
+Hdec = haskell_dec_psv(...
     nlyr,vp,vs,rho,thik,... % earth model
     nw,w,...                % frequency samples
     rayp);                  % ray parameter
