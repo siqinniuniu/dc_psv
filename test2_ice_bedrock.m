@@ -10,8 +10,8 @@ saclst = [sacdir,'evt.lst'];
 cmpnm = {'.BHR','.BHZ'};
 
 %time samples
-t0 = -5;
-t1 = 10;
+t0 = 0;
+t1 = 20;
 fs = 20;
 
 %Earth model (ice/bedrock)
@@ -50,9 +50,10 @@ for ievt = 1:nevt
     
     %mode vector in the ice/bedrock
     idx4_evt = 4*(ievt-1)+(1:4);
-    for imod = 1:nmod
+    for iz = 1:nz
+        thik = [z(iz) 0];
         [mm1,mm0] = dc_psv(...
-            nlyr,vp(:,imod),vs(:,imod),rho(:,imod),thik(:,imod),... % earth model
+            nlyr,vp,vs,rho,thik,... % earth model
             nt,v0,fs,...            % time samples of velocity-stress vector
             rayp(ievt));            % ray parameter
         m1(idx4_evt,:,iz) = mm1;
@@ -67,17 +68,17 @@ Esu1 = Esu0;
 for ievt = 1:nevt
     
     qs0 = sqrt(vs(1)^-2-rayp(ievt)^2);
-    coef0 = rho(1)*vs(1)^2*qs;
+    coef0 = rho(1)*vs(1)^2*qs0;
     
     qs1 = sqrt(vs(nlyr)^-2-rayp(ievt)^2);
-    coef1 = rho(nlyr)*vs(nlyr)^2*qs;
+    coef1 = rho(nlyr)*vs(nlyr)^2*qs1;
     
     idx0 = 4*(ievt-1);
     for iz = 1:nz
+        Su0 = m0(idx0+4,:,iz);
+        Esu0(ievt,iz) = coef0*sum(Su0.^2);
         Su1 = m1(idx0+4,:,iz);
-        Esu1(ievt,iz) = coef*sum(Su1.^2);
-        Su1 = m1(idx0+4,:,iz);
-        Esu1(ievt,iz) = coef*sum(Su1.^2);
+        Esu1(ievt,iz) = coef1*sum(Su1.^2);
     end
 end
 

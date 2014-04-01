@@ -51,10 +51,10 @@ w1 = w-1i*tapercoef;
 H = repmat(eye(4),1,nt); %nt*(4,4) matrix
 for ilyr = 1:nlyr-1
     %mode/phase matrix
-    [M,Minv,J] = mode_psv(vp(ilyr),vs(ilyr),rho(ilyr),rayp);
-    %compute H for each frequency sample
+    [M,Minv,Q] = mode_psv(vp(ilyr),vs(ilyr),rho(ilyr),rayp);
+    %compute H for each frequency sample (A*d[v]/dt+d[v]/dz=0)
     for iw = 1:nt
-        Hilyr = M*diag(exp(1i*w1(iw)*J*thik(ilyr)))*Minv;
+        Hilyr = M*diag(exp(-1i*w1(iw)*Q*thik(ilyr)))*Minv; %minus sign corresponds to A*d[v]/dt+d[v]/dz=0
         idx4 = 4*(iw-1)+(1:4);
         H(:,idx4) = Hilyr*H(:,idx4);
     end
