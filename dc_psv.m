@@ -12,7 +12,7 @@ function [ m1 ] = dc_psv(...
 ts = sqrt(vs.^-2-rayp^2).*thik;
 ts = sum(ts(1:nlyr-1));
 
-%pad zeros to avoid time warp
+%pad zeros to avoid time wrap
 npad = ceil(2*ts*fs);
 nw = nt+npad;
 

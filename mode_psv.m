@@ -54,16 +54,16 @@ qss = 1/vs2-2*p2;
 
 %     down-going P      up-going P      down-going SV   up-going SV
 M = [ p,                p,              qs,             qs			;  % Vr
-    qp,               -qp,            -p,             p			;  % Vz
-    -2*mu*p*qp,       2*mu*p*qp,      -mu*qss,        mu*qss		;  % Tr
-    -mu*qss,          -mu*qss,        2*mu*p*qs,      2*mu*p*qs	]; % Tz
+      qp,              -qp,            -p,              p			;  % Vz
+     -2*mu*p*qp,        2*mu*p*qp,     -mu*qss,         mu*qss		;  % Tr
+     -mu*qss,          -mu*qss,         2*mu*p*qs,      2*mu*p*qs	]; % Tz
 
 % modal projection matrix
 %        Vr               Vz                 Tr          Tz
-Minv = [ p*mu,            mu*qss/qp/2,       -p/qp/2,	 -0.5       ;  % down-going P
-    p*mu,            -mu*qss/qp/2,      p/qp/2,	 -0.5       ;  % up-going P
-    mu*qss/qs/2,     -p*mu,             -0.5,		 p/qs/2     ;  % down-going SV
-    mu*qss/qs/2,     p*mu,               0.5,		 p/qs/2     ]/rho;  % up-going SV
+Minv = [ p*mu,            mu*qss/qp/2,      -p/qp/2,    -0.5       ;  % down-going P
+         p*mu,           -mu*qss/qp/2,       p/qp/2,    -0.5       ;  % up-going P
+         mu*qss/qs/2,    -p*mu,             -0.5,		 p/qs/2    ;  % down-going SV
+         mu*qss/qs/2,     p*mu,              0.5,		 p/qs/2    ]/rho;  % up-going SV
 
 % normalize velocity amplitude in M to one
 M = M*diag([vp,vp,vs,vs]);
