@@ -1,11 +1,13 @@
 function [REDsu,m1,Esu1,m0,Esu0] = SACST_dc_psv_nmodel(...
-    sacdir,saclst,cmpnm,...        % sac data
+    sacst,...                      % sac data
     t0,t1,fs,...                   % time window for downward continuation
     nlyr,nmod,vp,vs,rho,thik,...   % earth models 
-    sachd_rayp)                    % head field of ray parameter
+    sachd_rayp)                    % sac head field for ray parameter
 %downward continuate surface plane wavefield through earth models
-%size(vp) = [nlyr,nmod];
-%size(m1) = [4*nevt,nt,nmod];
+%output wave vectors in the first/last layer(m0,m1), and 
+%Su energy reduction ratio 1-Esu1/Esu0;
+%size(vp) = [nlyr,nmod]; %same for vs,rho,thik
+%size(m1) = [4*nevt,nt,nmod]; %same for m0
 
 %% parameters
 
@@ -34,7 +36,7 @@ function [REDsu,m1,Esu1,m0,Esu0] = SACST_dc_psv_nmodel(...
 %% load data
 
 %load sac files
-sacst = SACST_fread('list',saclst,'prefix',sacdir,'suffix',cmpnm);
+% sacst = SACST_fread('list',saclst,'prefix',sacdir,'suffix',cmpnm);
 
 %time window cut
 dt = 1/fs;
@@ -77,9 +79,11 @@ Esu0 = zeros(nevt,nmod);
 Esu1 = Esu0;
 for ievt = 1:nevt
     
+    %coef. from wave vector to energy
+    %first layer
     qs0 = sqrt(vs(1)^-2-rayp(ievt)^2);
     coef0 = rho(1)*vs(1)^2*qs0;
-    
+    %last layer
     qs1 = sqrt(vs(nlyr)^-2-rayp(ievt)^2);
     coef1 = rho(nlyr)*vs(nlyr)^2*qs1;
     
@@ -92,7 +96,7 @@ for ievt = 1:nevt
     end
 end
 
-%Su energy reduction rate
+%Su energy reduction ratio
 REDsu = 1-Esu1./Esu0;
 
 end
