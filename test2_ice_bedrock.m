@@ -4,9 +4,14 @@
 clear all;close all;clc
 %% parameters
 
+%sac
+sacdir = 'sac/';
+saclst = [sacdir,'evt.lst'];
+cmpnm = {'.BHR','.BHZ'};
+
 %time samples
-t0 = -10;
-t1 = 30;
+t0 = -5;
+t1 = 10;
 fs = 20;
 
 %Earth model (ice/bedrock)
@@ -16,36 +21,78 @@ rho = [0.917 2.72]; % g/cm^3
 % thik = [35 0];  % km
 nlyr = 2;
 
-%incident wave
-rayp = 0.06; % s/km
+%thickness of ice sheet
+z = 1:0.1:5;
 
-%low-pass filter for making receiver function
-a = 5;
+%% load SAC, time window cut
 
-%% SACST_synPRF_haskell
+sacst = SACST_fread('list',saclst,'prefix',sacdir,'suffix',cmpnm);
 
-[sacst,t] = SACST_synPRF_haskell(nlyr,vp,vs,rho,thik,t0,t1,fs,rayp,a);
+dt = 1/fs;
+t = t0:dt:t1;
+sacst = SACST_interp(sacst,t,'ref','0','rmnan',1);
 
-vr = sacst(1).data;
-vz = sacst(2).data;
-rz = sacst(3).data;
+%% downward continuate the surface wavefield
 
-%% downward continuate the surface record
-
+nz = length(z);
+nevt = size(sacst,1);
 nt = length(t);
 v0 = zeros(4,nt);
-v0(1,:) = vr;
-v0(2,:) = -vz;
+m0 = zeros(4*nevt,nt);
+m1 = zeros(4*nevt,nt,nz);
 
-m1 = dc_psv(...
-    nlyr,vp,vs,rho,thik,... % earth model
-    nt,v0,fs,...            % time samples of velocity-stress vector
-    rayp);                  % ray parameter
+rayp = [sacst(:,1).user0];
+for ievt = 1:nevt
+
+    v0(1,:) = sacst(ievt,1).data;
+    v0(2,:) = -1*sacst(ievt,2).data;
+    
+    %mode vector in the ice sheet
+    idx4_evt = 4*(ievt-1)+(1:4);
+    thik = [0 0];
+    m0(idx4_evt,:) = dc_psv(...
+            1,vp,vs,rho,thik,... % earth model
+            nt,v0,fs,...         % time samples of velocity-stress vector
+            rayp(ievt));
+    
+    %mode vector in the bedrock
+    for iz = 1:nz
+        thik = [z(iz) 0];
+        m1(idx4_evt,:,iz) = dc_psv(...
+            nlyr,vp,vs,rho,thik,... % earth model
+            nt,v0,fs,...            % time samples of velocity-stress vector
+            rayp(ievt));            % ray parameter
+    end
+end
+
+%% calculate Su energy reduction ratio
+
+Esu0 = zeros(nevt,1);
+for ievt = 1:nevt
+    idx0 = 4*(ievt-1);
+    Su = m0(idx0+4,:);
+    qs = sqrt(vs(1)^-2-rayp(ievt)^2);
+    coef = rho(1)*vs(1)^2*qs;
+    Esu0(ievt) = coef*sum(Su.^2);
+end
+
+Esu1 = zeros(nevt,nz);
+for ievt = 1:nevt
+    qs = sqrt(vs(2)^-2-rayp(ievt)^2);
+    coef = rho(2)*vs(2)^2*qs;
+    
+    idx0 = 4*(ievt-1);
+    for iz = 1:nz
+        Su = m1(idx0+4,:,iz);
+        Esu1(ievt,iz) = coef*sum(Su.^2);
+    end
+end
+
+%Su energy reduction
+REDsu = 1-Esu1./repmat(Esu0,1,nz);
 
 %% plot
 
 figure
-subplot(3,1,1); plot(t,vr,'k',t,vz,'r',t,rz,'b'); legend('vr','vz','rz')
-subplot(3,1,2); plot(t,m1(1,:),t,m1(2,:)); legend('Pd','Pu')
-subplot(3,1,3); plot(t,m1(3,:),t,m1(4,:)); legend('Sd','Su')
-xlabel('Time (s)')
+plot(z,REDsu)
+% ylim([-1 1])
